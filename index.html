@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Whack-a-Miller</title>
+    <style>
+        body { 
+            text-align: center; 
+            font-family: 'Arial Black', sans-serif; 
+            background: #1a1a1a; 
+            color: #ffcc00; 
+            user-select: none; /* Prevents highlighting text while clicking fast */
+        }
+        
+        /* 3x3 Grid Setup */
+        .grid { 
+            display: grid; 
+            grid-template-columns: repeat(3, 140px); 
+            grid-template-rows: repeat(3, 140px);
+            gap: 15px; 
+            justify-content: center; 
+            margin-top: 30px; 
+        }
+
+        .hole { 
+            width: 140px; 
+            height: 140px; 
+            background: #333; 
+            border-radius: 50%; 
+            border: 4px solid #555; 
+            position: relative; 
+            overflow: hidden; /* This hides Miller when he is "down" */
+            box-shadow: inset 0 10px 20px rgba(0,0,0,0.5);
+        }
+        
+        /* The Miller Picture */
+        .miller { 
+            width: 110px; 
+            position: absolute; 
+            bottom: -140px; /* Hidden below the hole */
+            left: 15px; 
+            transition: bottom 0.1s ease-out; 
+            cursor: crosshair;
+        }
+
+        /* Class added by JavaScript to make him pop up */
+        .miller.up { 
+            bottom: 10px; 
+        }
+    </style>
+</head>
+<body>
+
+    <h1>WHACK-A-MILLER</h1>
+    <p>Score: <span id="score" style="font-size: 2em;">0</span></p>
+
+    <div class="grid">
+        <div class="hole"><img src="miller.png" class="miller" onclick="whack(this)"></div>
+        <div class="hole"><img src="miller.png" class="miller" onclick="whack(this)"></div>
+        <div class="hole"><img src="miller.png" class="miller" onclick="whack(this)"></div>
+        <div class="hole"><img src="miller.png" class="miller" onclick="whack(this)"></div>
+        <div class="hole"><img src="miller.png" class="miller" onclick="whack(this)"></div>
+        <div class="hole"><img src="miller.png" class="miller" onclick="whack(this)"></div>
+        <div class="hole"><img src="miller.png" class="miller" onclick="whack(this)"></div>
+        <div class="hole"><img src="miller.png" class="miller" onclick="whack(this)"></div>
+        <div class="hole"><img src="miller.png" class="miller" onclick="whack(this)"></div>
+    </div>
+
+    <script>
+        const faces = document.querySelectorAll('.miller');
+        const scoreBoard = document.querySelector('#score');
+        let score = 0;
+        let lastFace;
+
+        function randomFace(faces) {
+            const idx = Math.floor(Math.random() * faces.length);
+            const face = faces[idx];
+            if (face === lastFace) return randomFace(faces); // Don't pick same hole twice
+            lastFace = face;
+            return face;
+        }
+
+        function popUp() {
+            // Random time between 0.5 and 1.2 seconds
+            const time = Math.random() * (1200 - 500) + 500;
+            const face = randomFace(faces);
+            
+            face.classList.add('up');
+            
+            setTimeout(() => {
+                face.classList.remove('up');
+                popUp(); 
+            }, time);
+        }
+
+        function whack(e) {
+            score++;
+            scoreBoard.textContent = score;
+            e.classList.remove('up'); // Hide him immediately when clicked
+        }
+
+        // Start the game!
+        popUp();
+    </script>
+</body>
+</html>
