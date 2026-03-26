@@ -33,14 +33,19 @@
         }
         
         /* The Miller Picture */
-        .miller { 
-            width: 110px; 
-            position: absolute; 
-            bottom: -140px; /* Hidden below the hole */
-            left: 15px; 
-            transition: bottom 0.1s ease-out; 
-            cursor: crosshair;
-        }
+.miller { 
+    width: 160px;          /* Increased from 110px - make this even bigger if needed */
+    height: auto; 
+    position: absolute; 
+    bottom: -180px;        /* Pushed further down so he can hide completely */
+    left: -10px;           /* Adjusted to center him if the image is wide */
+    transition: bottom 0.1s ease-out; 
+    cursor: crosshair;
+}
+
+.miller.up { 
+    bottom: 0px;           /* Where he stops when he pops up */
+}
 
         /* Class added by JavaScript to make him pop up */
         .miller.up { 
