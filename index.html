@@ -1,62 +1,103 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Whack-a-Miller</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Whack-A-Miller</title>
     <style>
         body { 
             text-align: center; 
             font-family: 'Arial Black', sans-serif; 
             background: #1a1a1a; 
             color: #ffcc00; 
-            user-select: none; /* Prevents highlighting text while clicking fast */
+            user-select: none;
+            margin: 0;
+            padding: 20px;
         }
-        
-        /* 3x3 Grid Setup */
+
+        .stats {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            margin-bottom: 20px;
+        }
+
+        h1 { margin-top: 0; text-transform: uppercase; letter-spacing: 2px; }
+
+        /* 3x3 Grid */
         .grid { 
             display: grid; 
-            grid-template-columns: repeat(3, 140px); 
-            grid-template-rows: repeat(3, 140px);
+            grid-template-columns: repeat(3, 110px); 
+            grid-template-rows: repeat(3, 110px);
             gap: 15px; 
             justify-content: center; 
-            margin-top: 30px; 
+        }
+
+        /* Responsive scaling for bigger screens */
+        @media(min-width: 600px) {
+            .grid { 
+                grid-template-columns: repeat(3, 180px); 
+                grid-template-rows: repeat(3, 180px); 
+            }
+            .hole { width: 180px !important; height: 180px !important; }
+            .miller { width: 160px !important; bottom: -180px !important; }
         }
 
         .hole { 
-            width: 140px; 
-            height: 140px; 
+            width: 110px; 
+            height: 110px; 
             background: #333; 
             border-radius: 50%; 
             border: 4px solid #555; 
             position: relative; 
-            overflow: hidden; /* This hides Miller when he is "down" */
+            overflow: hidden; 
             box-shadow: inset 0 10px 20px rgba(0,0,0,0.5);
         }
         
-        /* The Miller Picture */
-.miller { 
-    width: 300px;          /* Increased from 110px - make this even bigger if needed */
-    height: auto; 
-    position: absolute; 
-    bottom: -150px;        /* Pushed further down so he can hide completely */
-    left: -50px;           /* Adjusted to center him if the image is wide */
-    transition: bottom 0.1s ease-out; 
-    cursor: crosshair;
-}
+        .miller { 
+            width: 300px; 
+            position: absolute; 
+            bottom: -120px; 
+            left: -50%;
+            transform: translateX(-50%);
+            transition: bottom 0.1s ease-out; 
+            cursor: crosshair;
+        }
 
-.miller.up { 
-    bottom: -20px;           /* Where he stops when he pops up */
-}
-
-        /* Class added by JavaScript to make him pop up */
         .miller.up { 
-            bottom: 10px; 
+            bottom: 5px; 
+        }
+
+        #game-over {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.9);
+            padding: 40px;
+            border: 5px solid #ffcc00;
+            z-index: 10;
+        }
+
+        button {
+            background: #ffcc00;
+            border: none;
+            padding: 10px 20px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 1.2em;
         }
     </style>
 </head>
 <body>
 
-    <h1>WHACK-A-MILLER</h1>
-    <p>Score: <span id="score" style="font-size: 2em;">0</span></p>
+    <h1>Whack-A-Miller</h1>
+
+    <div class="stats">
+        <div>Score: <span id="score">0</span></div>
+        <div>Time: <span id="timer">30</span>s</div>
+    </div>
 
     <div class="grid">
         <div class="hole"><img src="miller.png" class="miller" onclick="whack(this)"></div>
@@ -70,40 +111,76 @@
         <div class="hole"><img src="miller.png" class="miller" onclick="whack(this)"></div>
     </div>
 
+    <div id="game-over">
+        <h2>TIME'S UP!</h2>
+        <p>Final Score: <span id="final-score">0</span></p>
+        <button onclick="location.reload()">PLAY AGAIN</button>
+    </div>
+
     <script>
         const faces = document.querySelectorAll('.miller');
         const scoreBoard = document.querySelector('#score');
+        const timerBoard = document.querySelector('#timer');
+        const gameOverScreen = document.querySelector('#game-over');
+        const finalScoreBoard = document.querySelector('#final-score');
+        
         let score = 0;
         let lastFace;
+        let timeLeft = 30;
+        let gameActive = true;
 
         function randomFace(faces) {
             const idx = Math.floor(Math.random() * faces.length);
             const face = faces[idx];
-            if (face === lastFace) return randomFace(faces); // Don't pick same hole twice
+            if (face === lastFace) return randomFace(faces);
             lastFace = face;
             return face;
         }
 
         function popUp() {
-            // Random time between 0.5 and 1.2 seconds
-            const time = Math.random() * (1200 - 500) + 500;
-            const face = randomFace(faces);
+            if (!gameActive) return;
             
+            const time = Math.random() * (1000 - 400) + 400;
+            const face = randomFace(faces);
             face.classList.add('up');
             
             setTimeout(() => {
                 face.classList.remove('up');
-                popUp(); 
+                if (gameActive) popUp(); 
             }, time);
         }
 
         function whack(e) {
+            if (!gameActive) return;
             score++;
             scoreBoard.textContent = score;
-            e.classList.remove('up'); // Hide him immediately when clicked
+            e.classList.remove('up');
+            
+            // Visual feedback: flash hole background
+            e.parentElement.style.background = '#555';
+            setTimeout(() => e.parentElement.style.background = '#333', 100);
         }
 
-        // Start the game!
+        function startTimer() {
+            const countdown = setInterval(() => {
+                timeLeft--;
+                timerBoard.textContent = timeLeft;
+
+                if (timeLeft <= 0) {
+                    clearInterval(countdown);
+                    endGame();
+                }
+            }, 1000);
+        }
+
+        function endGame() {
+            gameActive = false;
+            finalScoreBoard.textContent = score;
+            gameOverScreen.style.display = 'block';
+        }
+
+        // Start!
+        startTimer();
         popUp();
     </script>
 </body>
